@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="Untitled (600 x 600 px).png" alt="OneKnobToRuleThemAll Logo" width="200"/>
+  <img src="Assets/Untitled (600 x 600 px).png" alt="OneKnobToRuleThemAll Logo" width="200"/>
   <h1>OneKnobToRuleThemAll</h1>
   <p><b>A Premium Distortion & Saturation Plugin That is Legally Distinct From Any Ring-Obsessed Fantasy Franchises</b></p>
 </div>
@@ -67,6 +67,6 @@ Once compiled, the plugins will be located at:
 
 ## ☕ Support the Project
 
-This plugin is completely free and open-source. However, if you use it in your mixes and find it helpful, please consider **[buying me a coffee on Gumroad!](https://fenrikos.gumroad.com/l/axiseq)** 
+This plugin is completely free and open-source. However, if you use it in your mixes and find it helpful, please consider **[buying me a coffee on Gumroad!](https://fenrikos.gumroad.com/l/oneknobtorulethemall)** 
 
 Your support helps keep this project alive and funds the development of future audio plugins!
