@@ -1,0 +1,72 @@
+/*
+  ==============================================================================
+
+    PluginProcessor.h
+    OneKnobToRuleThemAll — asymmetric distortion plugin.
+    APVTS with macroDrive (float 0-1) and satFlavor (choice: Tape/Console/Destroy).
+
+  ==============================================================================
+*/
+
+#pragma once
+
+#include <JuceHeader.h>
+#include "OneKnobToRuleThemAllDSP.h"
+
+//==============================================================================
+class OneKnobToRuleThemAllAudioProcessor  : public juce::AudioProcessor
+{
+public:
+    //==============================================================================
+    OneKnobToRuleThemAllAudioProcessor();
+    ~OneKnobToRuleThemAllAudioProcessor() override;
+
+    //==============================================================================
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
+    void releaseResources() override;
+
+   #ifndef JucePlugin_PreferredChannelConfigurations
+    bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
+   #endif
+
+    void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+
+    //==============================================================================
+    juce::AudioProcessorEditor* createEditor() override;
+    bool hasEditor() const override;
+
+    //==============================================================================
+    const juce::String getName() const override;
+
+    bool acceptsMidi() const override;
+    bool producesMidi() const override;
+    bool isMidiEffect() const override;
+    double getTailLengthSeconds() const override;
+
+    //==============================================================================
+    int getNumPrograms() override;
+    int getCurrentProgram() override;
+    void setCurrentProgram (int index) override;
+    const juce::String getProgramName (int index) override;
+    void changeProgramName (int index, const juce::String& newName) override;
+
+    //==============================================================================
+    void getStateInformation (juce::MemoryBlock& destData) override;
+    void setStateInformation (const void* data, int sizeInBytes) override;
+
+    //==============================================================================
+    /** Public access to the APVTS for the editor. */
+    juce::AudioProcessorValueTreeState apvts;
+
+    /** Creates the parameter layout used by the APVTS. */
+    static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+private:
+    //==============================================================================
+    OneKnobToRuleThemAllDSP dspEngine;
+
+    /** Smoother for the macro drive parameter to avoid zipper noise. */
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedDrive;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobToRuleThemAllAudioProcessor)
+};

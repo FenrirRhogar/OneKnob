@@ -1,0 +1,265 @@
+/*
+  ==============================================================================
+
+    PluginProcessor.cpp
+    OneKnobToRuleThemAll — asymmetric distortion plugin.
+    Maps a single "macroDrive" knob to multiple DSP parameters with
+    exponential / linear curves, and applies inverse output compensation.
+
+  ==============================================================================
+*/
+
+#include "PluginProcessor.h"
+#include "PluginEditor.h"
+#include <cmath>
+
+//==============================================================================
+// Parameter layout
+//==============================================================================
+juce::AudioProcessorValueTreeState::ParameterLayout
+    OneKnobToRuleThemAllAudioProcessor::createParameterLayout()
+{
+    juce::AudioProcessorValueTreeState::ParameterLayout layout;
+
+    layout.add (std::make_unique<juce::AudioParameterFloat> (
+        juce::ParameterID ("macroDrive", 1),
+        "Macro Drive",
+        juce::NormalisableRange<float> (0.0f, 1.0f, 0.001f),
+        0.0f));
+
+    layout.add (std::make_unique<juce::AudioParameterChoice> (
+        juce::ParameterID ("satFlavor", 1),
+        "Saturation Flavor",
+        juce::StringArray { "Dwarven (Tape)", "Elven (Console)", "Mordor (Destroy)" },
+        0));
+
+    return layout;
+}
+
+//==============================================================================
+OneKnobToRuleThemAllAudioProcessor::OneKnobToRuleThemAllAudioProcessor()
+#ifndef JucePlugin_PreferredChannelConfigurations
+     : AudioProcessor (BusesProperties()
+                     #if ! JucePlugin_IsMidiEffect
+                      #if ! JucePlugin_IsSynth
+                       .withInput  ("Input",  juce::AudioChannelSet::stereo(), true)
+                      #endif
+                       .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
+                     #endif
+                       ),
+       apvts (*this, nullptr, "PARAMETERS", createParameterLayout())
+#endif
+{
+}
+
+OneKnobToRuleThemAllAudioProcessor::~OneKnobToRuleThemAllAudioProcessor()
+{
+}
+
+//==============================================================================
+const juce::String OneKnobToRuleThemAllAudioProcessor::getName() const
+{
+    return JucePlugin_Name;
+}
+
+bool OneKnobToRuleThemAllAudioProcessor::acceptsMidi() const
+{
+   #if JucePlugin_WantsMidiInput
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+bool OneKnobToRuleThemAllAudioProcessor::producesMidi() const
+{
+   #if JucePlugin_ProducesMidiOutput
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+bool OneKnobToRuleThemAllAudioProcessor::isMidiEffect() const
+{
+   #if JucePlugin_IsMidiEffect
+    return true;
+   #else
+    return false;
+   #endif
+}
+
+double OneKnobToRuleThemAllAudioProcessor::getTailLengthSeconds() const
+{
+    return 0.0;
+}
+
+int OneKnobToRuleThemAllAudioProcessor::getNumPrograms()
+{
+    return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
+                // so this should be at least 1, even if you're not really implementing programs.
+}
+
+int OneKnobToRuleThemAllAudioProcessor::getCurrentProgram()
+{
+    return 0;
+}
+
+void OneKnobToRuleThemAllAudioProcessor::setCurrentProgram (int index)
+{
+    juce::ignoreUnused (index);
+}
+
+const juce::String OneKnobToRuleThemAllAudioProcessor::getProgramName (int index)
+{
+    juce::ignoreUnused (index);
+    return {};
+}
+
+void OneKnobToRuleThemAllAudioProcessor::changeProgramName (int index, const juce::String& newName)
+{
+    juce::ignoreUnused (index, newName);
+}
+
+//==============================================================================
+void OneKnobToRuleThemAllAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+{
+    dspEngine.prepare (sampleRate, samplesPerBlock, getTotalNumInputChannels());
+
+    smoothedDrive.reset (sampleRate, 0.02);  // 20 ms smoothing
+    smoothedDrive.setCurrentAndTargetValue (
+        apvts.getRawParameterValue ("macroDrive")->load());
+}
+
+void OneKnobToRuleThemAllAudioProcessor::releaseResources()
+{
+    dspEngine.reset();
+}
+
+#ifndef JucePlugin_PreferredChannelConfigurations
+bool OneKnobToRuleThemAllAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+{
+  #if JucePlugin_IsMidiEffect
+    juce::ignoreUnused (layouts);
+    return true;
+  #else
+    // Support mono or stereo
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::mono()
+     && layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo())
+        return false;
+
+    // Input must match output
+   #if ! JucePlugin_IsSynth
+    if (layouts.getMainOutputChannelSet() != layouts.getMainInputChannelSet())
+        return false;
+   #endif
+
+    return true;
+  #endif
+}
+#endif
+
+//==============================================================================
+void OneKnobToRuleThemAllAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
+                                                    juce::MidiBuffer& midiMessages)
+{
+    juce::ignoreUnused (midiMessages);
+    juce::ScopedNoDenormals noDenormals;
+
+    const auto totalNumInputChannels  = getTotalNumInputChannels();
+    const auto totalNumOutputChannels = getTotalNumOutputChannels();
+
+    // Clear unused output channels
+    for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
+        buffer.clear (i, 0, buffer.getNumSamples());
+
+    // ---- Retrieve parameters ------------------------------------------------
+    const float rawDrive = apvts.getRawParameterValue ("macroDrive")->load();
+    smoothedDrive.setTargetValue (rawDrive);
+
+    const int flavorIdx = static_cast<int> (apvts.getRawParameterValue ("satFlavor")->load());
+    dspEngine.setSaturationMode (static_cast<SaturationMode> (flavorIdx));
+
+    const int numSamples  = buffer.getNumSamples();
+    const int numChannels = juce::jmin (totalNumInputChannels, 2);
+
+    // ---- Per-sample processing with smoothed macro drive --------------------
+    for (int sample = 0; sample < numSamples; ++sample)
+    {
+        const float drive = smoothedDrive.getNextValue();
+
+        // ── Map macro drive (0-1) to DSP parameters ──
+
+        // 1. Input Gain: exponential 0 dB → +36 dB
+        //    dB = drive * 36   →   linear = 10^(dB/20)
+        const float inputGainDb = drive * 36.0f;
+        const float inputGainLin = std::pow (10.0f, inputGainDb / 20.0f);
+        dspEngine.setInputGain (inputGainLin);
+
+        // 2. Pre-Filter HPF: 20 Hz → 150 Hz (exponential sweep)
+        const float hpfFreq = 20.0f * std::pow (150.0f / 20.0f, drive);
+        dspEngine.setPreHPFCutoff (hpfFreq);
+
+        // 3. Post-Filter LPF: 22000 Hz → 6000 Hz (exponential sweep downward)
+        const float lpfFreq = 22000.0f * std::pow (6000.0f / 22000.0f, drive);
+        dspEngine.setPostLPFCutoff (lpfFreq);
+
+        // 4. DC Bias Depth: 0 % → 40 % of envelope
+        const float biasDepth = drive * 0.4f;
+        dspEngine.setBiasDepth (biasDepth);
+
+        // 5. Output Gain Compensation (inverse of input gain)
+        //    Slightly less than full inverse to allow a gentle volume increase
+        //    at extreme settings — sounds more natural.
+        const float outputGainDb  = -(inputGainDb * 0.85f);
+        const float outputGainLin = std::pow (10.0f, outputGainDb / 20.0f);
+        dspEngine.setOutputGain (outputGainLin);
+
+        // ── Process each channel ──
+        for (int ch = 0; ch < numChannels; ++ch)
+        {
+            float* channelData = buffer.getWritePointer (ch);
+            const float inputSample = channelData[sample];
+            const float processedSample = dspEngine.processSample (ch, inputSample);
+            
+            // Fade in the DSP effect over the first 2% of the knob to ensure 0% is true bypass
+            const float mix = juce::jlimit (0.0f, 1.0f, drive * 50.0f); 
+            channelData[sample] = inputSample + (processedSample - inputSample) * mix;
+        }
+    }
+}
+
+//==============================================================================
+bool OneKnobToRuleThemAllAudioProcessor::hasEditor() const
+{
+    return true;
+}
+
+juce::AudioProcessorEditor* OneKnobToRuleThemAllAudioProcessor::createEditor()
+{
+    return new OneKnobToRuleThemAllAudioProcessorEditor (*this);
+}
+
+//==============================================================================
+void OneKnobToRuleThemAllAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+{
+    auto state = apvts.copyState();
+    std::unique_ptr<juce::XmlElement> xml (state.createXml());
+    copyXmlToBinary (*xml, destData);
+}
+
+void OneKnobToRuleThemAllAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+{
+    std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
+
+    if (xmlState != nullptr)
+        if (xmlState->hasTagName (apvts.state.getType()))
+            apvts.replaceState (juce::ValueTree::fromXml (*xmlState));
+}
+
+//==============================================================================
+// This creates new instances of the plugin..
+juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
+{
+    return new OneKnobToRuleThemAllAudioProcessor();
+}

@@ -1,0 +1,15 @@
+build/
+Builds/
+JuceLibraryCode/
+.vs/
+*.exe
+*.vst3
+*.lib
+*.exp
+*.dll
+*.pdb
+*.ipch
+*.db
+*.suo
+*.user
+*.bin
