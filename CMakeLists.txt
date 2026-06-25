@@ -34,7 +34,7 @@ juce_add_plugin(OneKnobToRuleThemAll
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_MANUFACTURER_CODE Fnrk
     PLUGIN_CODE              Okrg
-    FORMATS                  VST3 Standalone
+    FORMATS                  VST3 AU Standalone
     PRODUCT_NAME             "OneKnobToRuleThemAll"
     ICON_BIG                 "Assets/Knob.png"
     ICON_SMALL               "Assets/Knob.png"
