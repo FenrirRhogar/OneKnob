@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="OneKnobToRuleThemAll_logo.png" alt="OneKnobToRuleThemAll Logo" width="200"/>
+  <img src="Untitled (600 x 600 px).png" alt="OneKnobToRuleThemAll Logo" width="200"/>
   <h1>OneKnobToRuleThemAll</h1>
   <p><b>A Premium Distortion & Saturation Plugin That is Legally Distinct From Any Ring-Obsessed Fantasy Franchises</b></p>
 </div>
