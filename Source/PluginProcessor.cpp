@@ -209,9 +209,9 @@ void OneKnobToRuleThemAllAudioProcessor::processBlock (juce::AudioBuffer<float>&
         dspEngine.setBiasDepth (biasDepth);
 
         // 5. Output Gain Compensation (inverse of input gain)
-        //    Slightly less than full inverse to allow a gentle volume increase
-        //    at extreme settings — sounds more natural.
-        const float outputGainDb  = -(inputGainDb * 0.85f);
+        //    Reduced from 0.85f to 0.25f because the waveshaper naturally crushes the amplitude.
+        //    Pulling it back too much causes a severe volume drop.
+        const float outputGainDb  = -(inputGainDb * 0.25f);
         const float outputGainLin = std::pow (10.0f, outputGainDb / 20.0f);
         dspEngine.setOutputGain (outputGainLin);
 
