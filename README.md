@@ -1,7 +1,7 @@
 <div align="center">
   <img src="Assets/Untitled (600 x 600 px).png" alt="OneKnobToRuleThemAll Logo" width="200"/>
   <h1>OneKnobToRuleThemAll</h1>
-  <p><b>A Premium Distortion & Saturation Plugin That is Legally Distinct From Any Ring-Obsessed Fantasy Franchises</b></p>
+  <p><b>A Distortion & Saturation Plugin That is Legally Distinct From Any Ring-Obsessed Fantasy Franchises</b></p>
 </div>
 
 ---
@@ -12,7 +12,7 @@
 
 ## 🎛️ Overview
 
-**OneKnobToRuleThemAll** is a beautiful, intuitive, single-knob saturation and distortion audio plugin built with JUCE. It features a completely custom aesthetic that successfully avoids the gaze of large corporate lawyers (and other, more fiery, lidless eyes).
+**OneKnobToRuleThemAll** is a single-knob saturation and distortion audio plugin built with JUCE. It features a completely custom aesthetic that successfully avoids the gaze of large corporate lawyers (and other, more fiery, lidless eyes).
 
 ## ✨ Key Features
 
@@ -23,7 +23,7 @@
   - **MORDOR**: Total destruction and hard clipping. One does not simply walk into this mode.
 - **Dynamic UI**: Text and colors dynamically change and respond as the drive increases.
 - **Zero Latency DSP**: High-performance distortion algorithms crafted for real-time audio processing without delay.
-- **Premium User Interface**: Features a fully custom JUCE LookAndFeel, PNG asset rendering, and a glowing aesthetic that definitely isn't copyrighted by the Tolkien estate.
+- **Custom User Interface**: A fully custom JUCE LookAndFeel, PNG asset rendering, and a glowing aesthetic that definitely isn't copyrighted by the Tolkien estate.
 
 ## 🛠️ Installation
 
