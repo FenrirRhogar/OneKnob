@@ -206,10 +206,12 @@ float OneKnobDSP::waveshapeDestroy (float x)
 
     if (xc >= 0.0f)
     {
-        // 3rd-order polynomial: y = x - (x^3 / 3)  (classic soft-clip)
-        const float x2 = xc * xc;
-        const float x3 = x2 * xc;
-        float y = xc - x3 / 3.0f;
+        // 3rd-order polynomial: y = x - (x^3 / 3)  (classic soft-clip). Its peak is at x = 1, so the
+        // input is clamped there; past it the cubic would turn back down and flip the polarity.
+        const float xs = juce::jmin (xc, 1.0f);
+        const float x2 = xs * xs;
+        const float x3 = x2 * xs;
+        float y = xs - x3 / 3.0f;
         return juce::jlimit (-1.0f, 1.0f, y);
     }
     else
