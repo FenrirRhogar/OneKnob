@@ -102,7 +102,12 @@ public:
         beginTest ("The oversampling latency is reported to the host");
         auto plugin = makeProcessor();
         const int latency = plugin->getLatencySamples();
+        logMessage ("latency: " + juce::String (latency) + " samples");
         expect (latency > 0 && latency < 256, "latency " + juce::String (latency));
+
+        beginTest ("The latency is known before the plugin is prepared");
+        std::unique_ptr<juce::AudioProcessor> fresh (createPluginFilter());
+        expectEquals (fresh->getLatencySamples(), latency);
 
         beginTest ("At 0 % the output is the input, delayed by exactly the reported latency");
         const auto input = sine (1000.0f, 0.5f, 9600);

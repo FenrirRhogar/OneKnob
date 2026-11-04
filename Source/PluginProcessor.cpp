@@ -52,6 +52,9 @@ OneKnobAudioProcessor::OneKnobAudioProcessor()
        apvts (*this, nullptr, "PARAMETERS", createParameterLayout())
 #endif
 {
+    // The oversampling filters fix the latency up front, so hosts that ask before preparing see it too.
+    oversampling.initProcessing (512);
+    setLatencySamples (static_cast<int> (oversampling.getLatencyInSamples()));
 }
 
 OneKnobAudioProcessor::~OneKnobAudioProcessor()
