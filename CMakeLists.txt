@@ -120,6 +120,17 @@ if(ONEKNOB_LTO)
 endif()
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Unit tests (run build/OneKnobTests, or build/Release/OneKnobTests.exe on Windows)
+# ──────────────────────────────────────────────────────────────────────────────
+option(ONEKNOB_TESTS "Build the unit tests" ON)
+if(ONEKNOB_TESTS)
+    add_executable(OneKnobTests tests/ProcessorTests.cpp)
+    target_include_directories(OneKnobTests PRIVATE $<TARGET_PROPERTY:OneKnob,INCLUDE_DIRECTORIES>)
+    target_compile_definitions(OneKnobTests PRIVATE $<TARGET_PROPERTY:OneKnob,COMPILE_DEFINITIONS>)
+    target_link_libraries(OneKnobTests PRIVATE OneKnob)
+endif()
+
+# ──────────────────────────────────────────────────────────────────────────────
 # Optional: OneKnob_calibrate measures the level change per mode and prints the trim table
 # for Source/LevelCompensation.h
 # ──────────────────────────────────────────────────────────────────────────────
