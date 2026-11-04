@@ -12,6 +12,7 @@
 
 #include <JuceHeader.h>
 #include "OneKnobDSP.h"
+#include "BypassFader.h"
 
 //==============================================================================
 class OneKnobAudioProcessor  : public juce::AudioProcessor
@@ -30,6 +31,8 @@ public:
    #endif
 
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
+
+    juce::AudioProcessorParameter* getBypassParameter() const override { return apvts.getParameter ("bypass"); }
 
     //==============================================================================
     juce::AudioProcessorEditor* createEditor() override;
@@ -71,6 +74,9 @@ private:
     /** 4x oversampling keeps the waveshapers' harmonics from folding back as aliasing.
         Linear-phase FIR with an integer latency, which is reported to the host. */
     juce::dsp::Oversampling<float> oversampling { 2, 2, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, true, true };
+
+    /** Crossfades to the latency-aligned dry signal when the host (or the UI) bypasses the plugin. */
+    oneknob::BypassFader bypassFader;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobAudioProcessor)
 };

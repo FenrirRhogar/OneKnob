@@ -33,6 +33,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout
         juce::StringArray { "Dwarven (Tape)", "Elven (Console)", "Dragonfire (Destroy)" },
         0));
 
+    layout.add (std::make_unique<juce::AudioParameterBool> (juce::ParameterID ("bypass", 1), "Bypass", false));
+
     return layout;
 }
 
@@ -131,6 +133,9 @@ void OneKnobAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     const auto factor = static_cast<int> (oversampling.getOversamplingFactor());
     dspEngine.prepare (sampleRate * factor, samplesPerBlock * factor, getTotalNumInputChannels());
 
+    bypassFader.prepare (sampleRate, samplesPerBlock, getTotalNumInputChannels(), getLatencySamples(),
+                         apvts.getRawParameterValue ("bypass")->load() > 0.5f);
+
     smoothedDrive.reset (sampleRate, 0.02);  // 20 ms smoothing
     smoothedDrive.setCurrentAndTargetValue (
         apvts.getRawParameterValue ("macroDrive")->load());
@@ -191,6 +196,8 @@ void OneKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     if (numChannels == 0)
         return;
 
+    bypassFader.capture (buffer, numChannels);
+
     juce::dsp::AudioBlock<float> block (buffer.getArrayOfWritePointers(),
                                         static_cast<size_t> (numChannels),
                                         static_cast<size_t> (numSamples));
@@ -248,6 +255,7 @@ void OneKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
     }
 
     oversampling.processSamplesDown (block);
+    bypassFader.apply (buffer, numChannels, apvts.getRawParameterValue ("bypass")->load() > 0.5f);
 }
 
 //==============================================================================
