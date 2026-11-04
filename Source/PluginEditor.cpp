@@ -2,7 +2,7 @@
   ==============================================================================
 
     PluginEditor.cpp
-    One Knob — SVG Asset based GUI.
+    One Knob — parchment GUI built on the PNG artwork.
 
   ==============================================================================
 */
@@ -12,6 +12,15 @@
 
 // Required for binary assets
 #include "BinaryData.h"
+
+namespace
+{
+    // Ink on parchment
+    const juce::Colour ink      { 0xFF1A1410 };
+    const juce::Colour fadedInk { 0xFF5A4632 };
+
+    const char* const modeNames[] { "DWARVEN", "ELVEN", "DRAGONFIRE" };
+}
 
 //==============================================================================
 // Colour palette helpers
@@ -31,17 +40,6 @@ OneKnobLookAndFeel::OneKnobLookAndFeel()
 {
     // Load PNG
     knobImg = juce::ImageCache::getFromMemory (BinaryData::Knob_png, BinaryData::Knob_pngSize);
-
-    // Modern Dark Theme Defaults for ComboBox
-    setColour (juce::ComboBox::backgroundColourId,        juce::Colour (0xFF1E1F24));
-    setColour (juce::ComboBox::textColourId,              juce::Colour (0xFFF0F0F0));
-    setColour (juce::ComboBox::outlineColourId,           juce::Colour (0xFF33353D));
-    setColour (juce::ComboBox::arrowColourId,             juce::Colour (0xFFA0A0A0));
-    
-    setColour (juce::PopupMenu::backgroundColourId,       juce::Colour (0xFF23252B));
-    setColour (juce::PopupMenu::textColourId,             juce::Colour (0xFFF0F0F0));
-    setColour (juce::PopupMenu::highlightedBackgroundColourId, juce::Colour (0xFF3F424E));
-    setColour (juce::PopupMenu::highlightedTextColourId,  juce::Colour (0xFFFFFFFF));
 }
 
 void OneKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
@@ -59,16 +57,19 @@ void OneKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
     const auto centreY  = bounds.getCentreY();
     const auto diameter = radius * 2.0f;
     const auto angle    = rotaryStartAngle + sliderPos * (rotaryEndAngle - rotaryStartAngle);
+    const auto arcRadius = radius + 10.0f;
 
     const juce::Colour currentColour = getArcColour (sliderPos);
 
+    // How hot the knob burns: mostly the drive, plus a breath of the output level.
+    const float heat = juce::jlimit (0.0f, 1.0f, sliderPos * (0.75f + 0.45f * glowLevel));
+
     // ---- Dynamic Outer Glow -------------------------------------------------
+    if (sliderPos > 0.001f)
     {
-        const float glowBase = 12.0f;
-        const float glowExtra = 20.0f * sliderPos;
-        const float glowRadius = radius + glowBase + glowExtra;
-        
-        juce::ColourGradient glow (currentColour.withAlpha (0.25f + 0.15f * sliderPos), centreX, centreY,
+        const float glowRadius = radius + 14.0f + 26.0f * heat;
+
+        juce::ColourGradient glow (currentColour.withAlpha (0.10f + 0.35f * heat), centreX, centreY,
                                    currentColour.withAlpha (0.0f), centreX - glowRadius, centreY - glowRadius,
                                    true);
         g.setGradientFill (glow);
@@ -76,31 +77,41 @@ void OneKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
                        glowRadius * 2.0f, glowRadius * 2.0f);
     }
 
-    // ---- Track arc (dim grey) -----------------------------------------------
+    // ---- Track arc (inked groove in the parchment) -------------------------
     {
-        const float trackThickness = 12.0f; // THICKER TRACK
         juce::Path trackArc;
-        trackArc.addCentredArc (centreX, centreY, radius + 10.0f, radius + 10.0f,
+        trackArc.addCentredArc (centreX, centreY, arcRadius, arcRadius,
                                 0.0f, rotaryStartAngle, rotaryEndAngle, true);
-        g.setColour (juce::Colour (0xFF26282E));
-        g.strokePath (trackArc, juce::PathStrokeType (trackThickness,
-                      juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        g.setColour (ink.withAlpha (0.16f));
+        g.strokePath (trackArc, juce::PathStrokeType (12.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        g.setColour (ink.withAlpha (0.35f));
+        g.strokePath (trackArc, juce::PathStrokeType (1.0f));
     }
 
-    // ---- Filled arc (premium gradient) behind the knob ----------------------
+    // ---- Filled arc (ember gradient with a glow that grows with heat) -------
     if (sliderPos > 0.001f)
     {
-        const float fillThickness = 12.0f; // THICKER FILL
         juce::Path filledArc;
-        filledArc.addCentredArc (centreX, centreY, radius + 10.0f, radius + 10.0f,
+        filledArc.addCentredArc (centreX, centreY, arcRadius, arcRadius,
                                  0.0f, rotaryStartAngle, angle, true);
 
-        juce::ColourGradient grad (getArcColour(0.0f), centreX - radius, centreY + radius,
+        // Soft halo: the same arc stroked wider and fainter.
+        for (auto [haloWidth, alpha] : { std::pair { 30.0f, 0.10f }, std::pair { 22.0f, 0.16f }, std::pair { 16.0f, 0.24f } })
+        {
+            g.setColour (currentColour.withAlpha (alpha * heat));
+            g.strokePath (filledArc, juce::PathStrokeType (haloWidth, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        }
+
+        juce::ColourGradient grad (getArcColour (0.0f), centreX - radius, centreY + radius,
                                    currentColour, centreX + radius, centreY - radius,
                                    false);
         g.setGradientFill (grad);
-        g.strokePath (filledArc, juce::PathStrokeType (fillThickness,
-                      juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+        g.strokePath (filledArc, juce::PathStrokeType (12.0f, juce::PathStrokeType::curved, juce::PathStrokeType::rounded));
+
+        // Bright tip at the current position.
+        const auto tip = juce::Point<float> (centreX, centreY).getPointOnCircumference (arcRadius, angle);
+        g.setColour (juce::Colours::white.withAlpha (0.35f + 0.4f * heat));
+        g.fillEllipse (juce::Rectangle<float> (5.0f, 5.0f).withCentre (tip));
     }
 
     // ---- Draw Custom Knob PNG ----------------------------------------------
@@ -108,9 +119,12 @@ void OneKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
 
     if (knobImg.isValid())
     {
+        g.saveState();
+        g.setOpacity (1.0f);   // drawImage uses the current colour's alpha
+        g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         g.addTransform (juce::AffineTransform::rotation (angle, centreX, centreY));
         g.drawImage (knobImg, imgBounds);
-        g.addTransform (juce::AffineTransform::rotation (-angle, centreX, centreY));
+        g.restoreState();
     }
     else
     {
@@ -119,37 +133,91 @@ void OneKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
     }
 }
 
-void OneKnobLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int width, int height,
-                                           float sliderPos, float /*minSliderPos*/, float /*maxSliderPos*/,
-                                           const juce::Slider::SliderStyle /*style*/, juce::Slider& /*slider*/)
+//==============================================================================
+// Mode selector
+//==============================================================================
+ModeSelector::ModeSelector (juce::RangedAudioParameter& parameter)
+    : attachment (parameter, [this] (float value) { selected = juce::roundToInt (value); repaint(); })
 {
-    juce::Rectangle<float> track (static_cast<float>(x), y + height * 0.35f, static_cast<float>(width), height * 0.3f);
-    
-    // Draw track
-    g.setColour (juce::Colour (0xFF1E1F24));
-    g.fillRoundedRectangle (track, track.getHeight() * 0.5f);
-
-    g.setColour (juce::Colour (0xFF33353D));
-    g.drawRoundedRectangle (track, track.getHeight() * 0.5f, 1.5f);
-
-    // Draw Thumb
-    float thumbWidth = height * 0.9f;
-    juce::Rectangle<float> thumb (sliderPos - thumbWidth * 0.5f, y + (height - thumbWidth) * 0.5f, thumbWidth, thumbWidth);
-    
-    g.setColour (juce::Colour (0xFFFCA311)); // Gold
-    g.fillEllipse (thumb);
-    
-    g.setColour (juce::Colours::black);
-    g.drawEllipse (thumb, 1.5f);
+    attachment.sendInitialUpdate();
+    setMouseCursor (juce::MouseCursor::PointingHandCursor);
+    setTitle ("Saturation flavour");
 }
 
+int ModeSelector::modeAt (juce::Point<int> position) const
+{
+    if (! getLocalBounds().contains (position))
+        return -1;
+    for (int i = 0; i < 3; ++i)
+        if (slotBounds (i).expanded (8.0f, 0.0f).contains (position.toFloat()))
+            return i;
+    return -1;
+}
+
+void ModeSelector::paint (juce::Graphics& g)
+{
+    g.setFont (juce::FontOptions (10.5f, juce::Font::bold));
+
+    for (int i = 0; i < 3; ++i)
+    {
+        auto area = slotBounds (i);
+        const bool isSelected = i == selected;
+
+        g.setColour (isSelected ? ink : fadedInk.withAlpha (i == hovered ? 0.85f : 0.55f));
+        g.drawText (modeNames[i], area.removeFromTop (16.0f), juce::Justification::centred, false);
+
+        if (isSelected)
+        {
+            auto line = juce::Rectangle<float> (area.getWidth() - 4.0f, 3.0f).withCentre ({ area.getCentreX(), area.getY() + 3.0f });
+            g.setColour (OneKnobLookAndFeel::getArcColour (0.55f));
+            g.fillRoundedRectangle (line, 1.5f);
+        }
+    }
+}
+
+juce::Rectangle<float> ModeSelector::slotBounds (int index) const
+{
+    // Each word gets room for its own width, with equal gaps between them.
+    const juce::Font font (juce::FontOptions (10.5f, juce::Font::bold));
+    float widths[3], total = 0.0f;
+    for (int i = 0; i < 3; ++i)
+        total += widths[i] = juce::GlyphArrangement::getStringWidth (font, modeNames[i]);
+
+    const float gap = juce::jmax (0.0f, ((float) getWidth() - total) / 3.0f);
+    float x = gap * 0.5f;
+    for (int i = 0; i < index; ++i)
+        x += widths[i] + gap;
+    return { x, 0.0f, widths[index], (float) getHeight() };
+}
+
+void ModeSelector::mouseDown (const juce::MouseEvent& e)
+{
+    if (const int mode = modeAt (e.getPosition()); mode >= 0 && mode != selected)
+        attachment.setValueAsCompleteGesture ((float) mode);
+}
+
+void ModeSelector::mouseMove (const juce::MouseEvent& e)
+{
+    if (const int mode = modeAt (e.getPosition()); mode != hovered)
+    {
+        hovered = mode;
+        repaint();
+    }
+}
+
+void ModeSelector::mouseExit (const juce::MouseEvent&)
+{
+    hovered = -1;
+    repaint();
+}
 
 //==============================================================================
 // Editor
 //==============================================================================
 OneKnobAudioProcessorEditor::OneKnobAudioProcessorEditor (
     OneKnobAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p)
+    : AudioProcessorEditor (&p), audioProcessor (p),
+      modeSelector (*p.apvts.getParameter ("satFlavor"))
 {
     setLookAndFeel (&oneKnobLookAndFeel);
 
@@ -159,7 +227,9 @@ OneKnobAudioProcessorEditor::OneKnobAudioProcessorEditor (
     // ---- Drive slider -------------------------------------------------------
     driveSlider.setSliderStyle (juce::Slider::RotaryVerticalDrag);
     driveSlider.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-    driveSlider.setPopupDisplayEnabled (false, false, this); 
+    driveSlider.setPopupDisplayEnabled (false, false, this);
+    driveSlider.setDoubleClickReturnValue (true, 0.0);
+    driveSlider.setTitle ("Drive");
     addAndMakeVisible (driveSlider);
 
     driveAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
@@ -168,20 +238,12 @@ OneKnobAudioProcessorEditor::OneKnobAudioProcessorEditor (
     driveSlider.onValueChange = [this] { cachedDrive = static_cast<float>(driveSlider.getValue()); };
     cachedDrive = static_cast<float> (driveSlider.getValue());   // show the saved value when the window opens
 
-    // ---- Flavor Switch (3-Way Toggle) ---------------------------------------
-    modeSwitch.setSliderStyle (juce::Slider::LinearHorizontal);
-    modeSwitch.setTextBoxStyle (juce::Slider::NoTextBox, false, 0, 0);
-    modeSwitch.setRange (0, 2, 1);
-    addAndMakeVisible (modeSwitch);
-
-    modeAttachment = std::make_unique<juce::AudioProcessorValueTreeState::SliderAttachment> (
-        audioProcessor.apvts, "satFlavor", modeSwitch);
-
-    modeSwitch.onValueChange = [this] { repaint(); };
+    // ---- Flavor selector ----------------------------------------------------
+    addAndMakeVisible (modeSelector);
 
     // ---- Window size --------------------------------------------------------
     setSize (360, 540);
-    
+
     startTimerHz(30);
 }
 
@@ -193,9 +255,16 @@ OneKnobAudioProcessorEditor::~OneKnobAudioProcessorEditor()
 
 void OneKnobAudioProcessorEditor::timerCallback()
 {
-    if (std::abs(cachedDrive - lastDrive) > 0.001f)
+    // Fast attack, slow release, like a VU needle.
+    const float peak = juce::jlimit (0.0f, 1.0f, audioProcessor.outputPeak.load());
+    const float previousLevel = meterLevel;
+    meterLevel = peak > meterLevel ? peak : meterLevel * 0.85f;
+
+    const bool levelMoved = std::abs (meterLevel - previousLevel) > 0.002f;
+    if (std::abs(cachedDrive - lastDrive) > 0.001f || levelMoved)
     {
         lastDrive = cachedDrive;
+        oneKnobLookAndFeel.glowLevel = meterLevel;
         repaint();
     }
 }
@@ -218,6 +287,7 @@ void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
     // Draw PNG Background if available
     if (bgImg.isValid())
     {
+        g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         g.drawImage (bgImg, getLocalBounds().toFloat());
     }
     else
@@ -229,34 +299,48 @@ void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
     }
 
     // ---- Title --------------------------------------------------------------
-    g.setColour (juce::Colours::black);
+    g.setColour (ink);
     g.setFont (juce::FontOptions (26.0f, juce::Font::bold)); // LARGER TITLE
     g.drawText ("ONE KNOB", 0, 50, getWidth(), 30, juce::Justification::centred, true);
-                
-    g.setColour (juce::Colours::black); 
-    g.setFont (juce::FontOptions (14.0f, juce::Font::bold)); // LARGER SUBTITLE
+
+    g.setColour (fadedInk);
+    g.setFont (juce::FontOptions (13.0f, juce::Font::bold).withKerningFactor (0.12f));
     g.drawText ("TO RULE THEM ALL", 0, 80, getWidth(), 20, juce::Justification::centred, true);
 
+    g.setColour (fadedInk.withAlpha (0.6f));
+    g.setFont (juce::FontOptions (8.5f, juce::Font::bold).withKerningFactor (0.3f));
+    g.drawText (juce::String (juce::CharPointer_UTF8 ("FENRIKOS  \xc2\xb7  V" JucePlugin_VersionString)), 0, 102, getWidth(), 12, juce::Justification::centred, false);
+
     // ---- Dynamic Status Text ------------------------------------------------
-    juce::Rectangle<int> statusArea (0, 410, getWidth(), 35);
-    
-    // Status label (e.g. "Heavy Distortion")
-    g.setColour (juce::Colours::black);
+    juce::Rectangle<int> statusArea (0, 404, getWidth(), 30);
+
+    // Status label (e.g. "Forge Saturation")
+    g.setColour (ink);
     g.setFont (juce::FontOptions (18.0f, juce::Font::bold)); // LARGER STATUS
     g.drawText (getDriveStatusText(cachedDrive), statusArea, juce::Justification::centred, true);
-    
-    // Drive percentage
-    g.setColour (juce::Colours::black);
-    g.setFont (juce::FontOptions (15.0f, juce::Font::bold)); // LARGER PERCENTAGE
-    g.drawText (juce::String(juce::roundToInt(cachedDrive * 100.0f)) + "%", 
-                statusArea.translated(0, 24), juce::Justification::centred, true);
 
-    // ---- Flavor Label -------------------------------------------------------
-    g.setColour (juce::Colours::black);
-    g.setFont (juce::FontOptions (10.0f, juce::Font::bold));
-    g.drawText ("DWARVEN", 85,  460, 60, 20, juce::Justification::centred, false);
-    g.drawText ("ELVEN",   150, 460, 60, 20, juce::Justification::centred, false);
-    g.drawText ("DRAGONFIRE", 205, 460, 80, 20, juce::Justification::centred, false);
+    // Drive percentage
+    g.setColour (fadedInk);
+    g.setFont (juce::FontOptions (14.0f, juce::Font::bold)); // LARGER PERCENTAGE
+    g.drawText (juce::String(juce::roundToInt(cachedDrive * 100.0f)) + "%",
+                statusArea.translated(0, 22), juce::Justification::centred, true);
+
+    // ---- Ember level meter --------------------------------------------------
+    {
+        auto meter = juce::Rectangle<float> (120.0f, 4.0f).withCentre ({ getWidth() * 0.5f, 462.0f });
+        g.setColour (ink.withAlpha (0.18f));
+        g.fillRoundedRectangle (meter, 2.0f);
+
+        const float db = juce::Decibels::gainToDecibels (meterLevel, -48.0f);
+        const float fill = juce::jlimit (0.0f, 1.0f, (db + 48.0f) / 48.0f);
+        if (fill > 0.0f)
+        {
+            auto lit = meter.withWidth (meter.getWidth() * fill);
+            g.setGradientFill (juce::ColourGradient (OneKnobLookAndFeel::getArcColour (0.0f), meter.getX(), 0.0f,
+                                                     OneKnobLookAndFeel::getArcColour (1.0f), meter.getRight(), 0.0f, false));
+            g.fillRoundedRectangle (lit, 2.0f);
+        }
+    }
 }
 
 void OneKnobAudioProcessorEditor::resized()
@@ -267,6 +351,6 @@ void OneKnobAudioProcessorEditor::resized()
     const int knobSize = 300; // Increased size so the box doesn't cut the track
     driveSlider.setBounds (area.withSizeKeepingCentre (knobSize, knobSize));
 
-    // ---- Flavor switch (SMALLER AND MOVED) ------------------------------
-    modeSwitch.setBounds (105, 480, 150, 20); 
+    // ---- Flavor selector ----------------------------------------------------
+    modeSelector.setBounds (84, 474, 192, 24);
 }

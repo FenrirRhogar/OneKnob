@@ -2,9 +2,10 @@
   ==============================================================================
 
     PluginEditor.h
-    One Knob — colorful, fun, premium GUI.
-    Gradient knob arc that shifts hue with drive, animated glow,
-    dynamic status text, and mode-colored combo box.
+    One Knob — parchment GUI.
+    Inscribed knob over an ember arc whose glow grows with drive and breathes
+    with the output level, dynamic status text, an ember level meter and an
+    inked three-way mode selector.
 
   ==============================================================================
 */
@@ -16,7 +17,7 @@
 
 //==============================================================================
 /**
-    Custom LookAndFeel with colorful gradient knob and styled combo box.
+    Custom LookAndFeel with the inscribed knob and its ember arc.
 */
 class OneKnobLookAndFeel : public juce::LookAndFeel_V4
 {
@@ -30,20 +31,45 @@ public:
                            float rotaryEndAngle,
                            juce::Slider& slider) override;
 
-    void drawLinearSlider (juce::Graphics& g, int x, int y, int width, int height,
-                           float sliderPos, float minSliderPos, float maxSliderPos,
-                           const juce::Slider::SliderStyle style, juce::Slider& slider) override;
-
     /** Helper: returns a colour along the knob gradient for a given 0-1 position. */
     static juce::Colour getArcColour (float normalised);
-    
+
+    /** Output level (0-1, smoothed) that makes the glow breathe with the audio. */
+    float glowLevel = 0.0f;
+
     // PNG Assets
     juce::Image knobImg;
 };
 
 //==============================================================================
+/**
+    The three saturation flavours as inked words on the parchment. The selected one is
+    drawn in full ink with an ember underline; click a word to switch.
+*/
+class ModeSelector : public juce::Component
+{
+public:
+    ModeSelector (juce::RangedAudioParameter& parameter);
+
+    void paint (juce::Graphics& g) override;
+    void mouseDown (const juce::MouseEvent& e) override;
+    void mouseMove (const juce::MouseEvent& e) override;
+    void mouseExit (const juce::MouseEvent& e) override;
+
+private:
+    int modeAt (juce::Point<int> position) const;
+    juce::Rectangle<float> slotBounds (int index) const;
+
+    juce::ParameterAttachment attachment;
+    int selected = 0;
+    int hovered = -1;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ModeSelector)
+};
+
+//==============================================================================
 class OneKnobAudioProcessorEditor  : public juce::AudioProcessorEditor,
-                                               private juce::Timer
+                                     private juce::Timer
 {
 public:
     explicit OneKnobAudioProcessorEditor (OneKnobAudioProcessor&);
@@ -68,13 +94,15 @@ private:
     juce::Slider driveSlider;
     std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> driveAttachment;
 
-    // ---- Flavor switch ------------------------------------------------------
-    juce::Slider modeSwitch;
-    std::unique_ptr<juce::AudioProcessorValueTreeState::SliderAttachment> modeAttachment;
+    // ---- Flavor selector ----------------------------------------------------
+    ModeSelector modeSelector;
 
     // Cached drive value for background painting
     float cachedDrive = 0.0f;
     float lastDrive = -1.0f;   // last value painted, per editor
+
+    // Output level, smoothed for the glow and the meter
+    float meterLevel = 0.0f;
 
     // PNG Background
     juce::Image bgImg;
