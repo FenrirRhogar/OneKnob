@@ -13,3 +13,6 @@ JuceLibraryCode/
 *.suo
 *.user
 *.bin
+
+# Release packages
+dist/

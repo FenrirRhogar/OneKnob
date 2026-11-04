@@ -1,0 +1,25 @@
+ONE KNOB  -  CHANGELOG
+
+1.1.0
+- New name: OneKnobToRuleThemAll is now One Knob. Old sessions open with the same settings.
+Sound
+- 8x oversampling: no more harsh aliasing at high drive, especially in the destroy mode.
+- The output now stays as loud as the input across the whole knob, so you hear the colour, not
+  just a louder signal (it used to get up to 11 dB louder halfway up the knob).
+- Fixed: the destroy mode flipped the polarity of hot signals into a hard square edge.
+- Fixed: the right channel could read past its filter state, which is undefined behaviour.
+- Switching flavours crossfades instead of clicking.
+- Host bypass parameter with a click-free crossfade.
+Look
+- Sharper artwork on HiDPI screens.
+- The knob's ember glow grows with the drive and breathes with the audio; new level meter and
+  an inked flavour selector.
+- Fixed: the readout showed 0 % until you moved the knob.
+Builds
+- Native builds for Windows, macOS (universal, VST3 and AU) and Linux (VST3 and LV2), all with a
+  Standalone app. Every build passes unit tests and pluginval at its strictest level; the AU also
+  passes Apple's auval.
+- Licence is now the GNU AGPL, version 3 or later.
+
+1.0.0
+- First release.
