@@ -1,24 +1,36 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(OneKnobToRuleThemAll VERSION 1.0.0 LANGUAGES CXX)
+project(OneKnobToRuleThemAll VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+option(ONEKNOB_LTO "Link-time optimisation (slow links; turn off for development)" ON)
+set(JUCE_DIR "" CACHE PATH "Local JUCE 8 checkout; fetched from GitHub when empty")
+
 # ──────────────────────────────────────────────────────────────────────────────
-# JUCE framework — use the local installation two levels up
+# JUCE framework: a local checkout if given, otherwise the pinned release
 # ──────────────────────────────────────────────────────────────────────────────
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../CMakeLists.txt")
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../.. ${CMAKE_CURRENT_BINARY_DIR}/JUCE EXCLUDE_FROM_ALL)
+if(JUCE_DIR)
+    add_subdirectory(${JUCE_DIR} JUCE EXCLUDE_FROM_ALL)
 else()
     include(FetchContent)
     FetchContent_Declare(
         JUCE
         GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
-        GIT_TAG 8.0.9
+        GIT_TAG 8.0.13
     )
     FetchContent_MakeAvailable(JUCE)
+endif()
+
+# VST3 and Standalone everywhere; AU for Logic/GarageBand on macOS; LV2 on Linux.
+if(APPLE)
+    set(ONEKNOB_FORMATS VST3 AU Standalone)
+elseif(WIN32)
+    set(ONEKNOB_FORMATS VST3 Standalone)
+else()
+    set(ONEKNOB_FORMATS VST3 LV2 Standalone)
 endif()
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -34,7 +46,8 @@ juce_add_plugin(OneKnobToRuleThemAll
     EDITOR_WANTS_KEYBOARD_FOCUS FALSE
     PLUGIN_MANUFACTURER_CODE Fnrk
     PLUGIN_CODE              Okrg
-    FORMATS                  VST3 AU Standalone
+    FORMATS                  ${ONEKNOB_FORMATS}
+    LV2URI                   "https://github.com/FenrirRhogar/OneKnob"
     PRODUCT_NAME             "OneKnobToRuleThemAll"
     ICON_BIG                 "Assets/Knob.png"
     ICON_SMALL               "Assets/Knob.png"
@@ -99,6 +112,9 @@ target_link_libraries(OneKnobToRuleThemAll
         juce::juce_gui_extra
     PUBLIC
         juce::juce_recommended_config_flags
-        juce::juce_recommended_lto_flags
         juce::juce_recommended_warning_flags
 )
+
+if(ONEKNOB_LTO)
+    target_link_libraries(OneKnobToRuleThemAll PUBLIC juce::juce_recommended_lto_flags)
+endif()
