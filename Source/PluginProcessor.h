@@ -2,7 +2,7 @@
   ==============================================================================
 
     PluginProcessor.h
-    OneKnobToRuleThemAll — asymmetric distortion plugin.
+    One Knob — asymmetric distortion plugin.
     APVTS with macroDrive (float 0-1) and satFlavor (choice: Tape/Console/Destroy).
 
   ==============================================================================
@@ -11,15 +11,15 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "OneKnobToRuleThemAllDSP.h"
+#include "OneKnobDSP.h"
 
 //==============================================================================
-class OneKnobToRuleThemAllAudioProcessor  : public juce::AudioProcessor
+class OneKnobAudioProcessor  : public juce::AudioProcessor
 {
 public:
     //==============================================================================
-    OneKnobToRuleThemAllAudioProcessor();
-    ~OneKnobToRuleThemAllAudioProcessor() override;
+    OneKnobAudioProcessor();
+    ~OneKnobAudioProcessor() override;
 
     //==============================================================================
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
@@ -63,10 +63,10 @@ public:
 
 private:
     //==============================================================================
-    OneKnobToRuleThemAllDSP dspEngine;
+    OneKnobDSP dspEngine;
 
     /** Smoother for the macro drive parameter to avoid zipper noise. */
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedDrive;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobToRuleThemAllAudioProcessor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobAudioProcessor)
 };

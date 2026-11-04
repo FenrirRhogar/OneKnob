@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    OneKnobToRuleThemAllDSP.h
+    OneKnobDSP.h
     Per-sample asymmetric distortion engine with dynamic filtering,
     envelope-following DC bias (sag), and three waveshaping modes.
 
@@ -40,11 +40,11 @@ struct ChannelFilterState
     The main DSP engine. All processing is per-sample so parameter modulation
     does not produce zipper noise.
 */
-class OneKnobToRuleThemAllDSP
+class OneKnobDSP
 {
 public:
-    OneKnobToRuleThemAllDSP();
-    ~OneKnobToRuleThemAllDSP() = default;
+    OneKnobDSP();
+    ~OneKnobDSP() = default;
 
     /** Call once before processing begins (or when the sample rate changes). */
     void prepare (double sampleRate, int maxBlockSize, int numChannels);
@@ -114,5 +114,5 @@ private:
     float biasDepth    = 0.0f;
     SaturationMode satMode = SaturationMode::Tape;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobToRuleThemAllDSP)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobDSP)
 };

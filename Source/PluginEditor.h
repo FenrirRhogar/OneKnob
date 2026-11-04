@@ -2,7 +2,7 @@
   ==============================================================================
 
     PluginEditor.h
-    OneKnobToRuleThemAll — colorful, fun, premium GUI.
+    One Knob — colorful, fun, premium GUI.
     Gradient knob arc that shifts hue with drive, animated glow,
     dynamic status text, and mode-colored combo box.
 
@@ -42,12 +42,12 @@ public:
 };
 
 //==============================================================================
-class OneKnobToRuleThemAllAudioProcessorEditor  : public juce::AudioProcessorEditor,
+class OneKnobAudioProcessorEditor  : public juce::AudioProcessorEditor,
                                                private juce::Timer
 {
 public:
-    explicit OneKnobToRuleThemAllAudioProcessorEditor (OneKnobToRuleThemAllAudioProcessor&);
-    ~OneKnobToRuleThemAllAudioProcessorEditor() override;
+    explicit OneKnobAudioProcessorEditor (OneKnobAudioProcessor&);
+    ~OneKnobAudioProcessorEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -59,7 +59,7 @@ private:
     /** Returns a fun status string based on the current drive value. */
     static juce::String getDriveStatusText (float drive);
 
-    OneKnobToRuleThemAllAudioProcessor& audioProcessor;
+    OneKnobAudioProcessor& audioProcessor;
 
     // Custom look and feel
     OneKnobLookAndFeel oneKnobLookAndFeel;
@@ -78,5 +78,5 @@ private:
     // PNG Background
     juce::Image bgImg;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobToRuleThemAllAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobAudioProcessorEditor)
 };

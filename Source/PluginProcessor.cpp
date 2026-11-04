@@ -2,7 +2,7 @@
   ==============================================================================
 
     PluginProcessor.cpp
-    OneKnobToRuleThemAll — asymmetric distortion plugin.
+    One Knob — asymmetric distortion plugin.
     Maps a single "macroDrive" knob to multiple DSP parameters with
     exponential / linear curves, and applies inverse output compensation.
 
@@ -17,7 +17,7 @@
 // Parameter layout
 //==============================================================================
 juce::AudioProcessorValueTreeState::ParameterLayout
-    OneKnobToRuleThemAllAudioProcessor::createParameterLayout()
+    OneKnobAudioProcessor::createParameterLayout()
 {
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
@@ -37,7 +37,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout
 }
 
 //==============================================================================
-OneKnobToRuleThemAllAudioProcessor::OneKnobToRuleThemAllAudioProcessor()
+OneKnobAudioProcessor::OneKnobAudioProcessor()
 #ifndef JucePlugin_PreferredChannelConfigurations
      : AudioProcessor (BusesProperties()
                      #if ! JucePlugin_IsMidiEffect
@@ -52,17 +52,17 @@ OneKnobToRuleThemAllAudioProcessor::OneKnobToRuleThemAllAudioProcessor()
 {
 }
 
-OneKnobToRuleThemAllAudioProcessor::~OneKnobToRuleThemAllAudioProcessor()
+OneKnobAudioProcessor::~OneKnobAudioProcessor()
 {
 }
 
 //==============================================================================
-const juce::String OneKnobToRuleThemAllAudioProcessor::getName() const
+const juce::String OneKnobAudioProcessor::getName() const
 {
     return JucePlugin_Name;
 }
 
-bool OneKnobToRuleThemAllAudioProcessor::acceptsMidi() const
+bool OneKnobAudioProcessor::acceptsMidi() const
 {
    #if JucePlugin_WantsMidiInput
     return true;
@@ -71,7 +71,7 @@ bool OneKnobToRuleThemAllAudioProcessor::acceptsMidi() const
    #endif
 }
 
-bool OneKnobToRuleThemAllAudioProcessor::producesMidi() const
+bool OneKnobAudioProcessor::producesMidi() const
 {
    #if JucePlugin_ProducesMidiOutput
     return true;
@@ -80,7 +80,7 @@ bool OneKnobToRuleThemAllAudioProcessor::producesMidi() const
    #endif
 }
 
-bool OneKnobToRuleThemAllAudioProcessor::isMidiEffect() const
+bool OneKnobAudioProcessor::isMidiEffect() const
 {
    #if JucePlugin_IsMidiEffect
     return true;
@@ -89,40 +89,40 @@ bool OneKnobToRuleThemAllAudioProcessor::isMidiEffect() const
    #endif
 }
 
-double OneKnobToRuleThemAllAudioProcessor::getTailLengthSeconds() const
+double OneKnobAudioProcessor::getTailLengthSeconds() const
 {
     return 0.0;
 }
 
-int OneKnobToRuleThemAllAudioProcessor::getNumPrograms()
+int OneKnobAudioProcessor::getNumPrograms()
 {
     return 1;   // NB: some hosts don't cope very well if you tell them there are 0 programs,
                 // so this should be at least 1, even if you're not really implementing programs.
 }
 
-int OneKnobToRuleThemAllAudioProcessor::getCurrentProgram()
+int OneKnobAudioProcessor::getCurrentProgram()
 {
     return 0;
 }
 
-void OneKnobToRuleThemAllAudioProcessor::setCurrentProgram (int index)
+void OneKnobAudioProcessor::setCurrentProgram (int index)
 {
     juce::ignoreUnused (index);
 }
 
-const juce::String OneKnobToRuleThemAllAudioProcessor::getProgramName (int index)
+const juce::String OneKnobAudioProcessor::getProgramName (int index)
 {
     juce::ignoreUnused (index);
     return {};
 }
 
-void OneKnobToRuleThemAllAudioProcessor::changeProgramName (int index, const juce::String& newName)
+void OneKnobAudioProcessor::changeProgramName (int index, const juce::String& newName)
 {
     juce::ignoreUnused (index, newName);
 }
 
 //==============================================================================
-void OneKnobToRuleThemAllAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
+void OneKnobAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     dspEngine.prepare (sampleRate, samplesPerBlock, getTotalNumInputChannels());
 
@@ -131,13 +131,13 @@ void OneKnobToRuleThemAllAudioProcessor::prepareToPlay (double sampleRate, int s
         apvts.getRawParameterValue ("macroDrive")->load());
 }
 
-void OneKnobToRuleThemAllAudioProcessor::releaseResources()
+void OneKnobAudioProcessor::releaseResources()
 {
     dspEngine.reset();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
-bool OneKnobToRuleThemAllAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
+bool OneKnobAudioProcessor::isBusesLayoutSupported (const BusesLayout& layouts) const
 {
   #if JucePlugin_IsMidiEffect
     juce::ignoreUnused (layouts);
@@ -160,7 +160,7 @@ bool OneKnobToRuleThemAllAudioProcessor::isBusesLayoutSupported (const BusesLayo
 #endif
 
 //==============================================================================
-void OneKnobToRuleThemAllAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
+void OneKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
                                                     juce::MidiBuffer& midiMessages)
 {
     juce::ignoreUnused (midiMessages);
@@ -230,25 +230,25 @@ void OneKnobToRuleThemAllAudioProcessor::processBlock (juce::AudioBuffer<float>&
 }
 
 //==============================================================================
-bool OneKnobToRuleThemAllAudioProcessor::hasEditor() const
+bool OneKnobAudioProcessor::hasEditor() const
 {
     return true;
 }
 
-juce::AudioProcessorEditor* OneKnobToRuleThemAllAudioProcessor::createEditor()
+juce::AudioProcessorEditor* OneKnobAudioProcessor::createEditor()
 {
-    return new OneKnobToRuleThemAllAudioProcessorEditor (*this);
+    return new OneKnobAudioProcessorEditor (*this);
 }
 
 //==============================================================================
-void OneKnobToRuleThemAllAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
+void OneKnobAudioProcessor::getStateInformation (juce::MemoryBlock& destData)
 {
     auto state = apvts.copyState();
     std::unique_ptr<juce::XmlElement> xml (state.createXml());
     copyXmlToBinary (*xml, destData);
 }
 
-void OneKnobToRuleThemAllAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
+void OneKnobAudioProcessor::setStateInformation (const void* data, int sizeInBytes)
 {
     std::unique_ptr<juce::XmlElement> xmlState (getXmlFromBinary (data, sizeInBytes));
 
@@ -261,5 +261,5 @@ void OneKnobToRuleThemAllAudioProcessor::setStateInformation (const void* data, 
 // This creates new instances of the plugin..
 juce::AudioProcessor* JUCE_CALLTYPE createPluginFilter()
 {
-    return new OneKnobToRuleThemAllAudioProcessor();
+    return new OneKnobAudioProcessor();
 }

@@ -2,7 +2,7 @@
   ==============================================================================
 
     PluginEditor.cpp
-    OneKnobToRuleThemAll — SVG Asset based GUI.
+    One Knob — SVG Asset based GUI.
 
   ==============================================================================
 */
@@ -147,8 +147,8 @@ void OneKnobLookAndFeel::drawLinearSlider (juce::Graphics& g, int x, int y, int 
 //==============================================================================
 // Editor
 //==============================================================================
-OneKnobToRuleThemAllAudioProcessorEditor::OneKnobToRuleThemAllAudioProcessorEditor (
-    OneKnobToRuleThemAllAudioProcessor& p)
+OneKnobAudioProcessorEditor::OneKnobAudioProcessorEditor (
+    OneKnobAudioProcessor& p)
     : AudioProcessorEditor (&p), audioProcessor (p)
 {
     setLookAndFeel (&oneKnobLookAndFeel);
@@ -184,13 +184,13 @@ OneKnobToRuleThemAllAudioProcessorEditor::OneKnobToRuleThemAllAudioProcessorEdit
     startTimerHz(30);
 }
 
-OneKnobToRuleThemAllAudioProcessorEditor::~OneKnobToRuleThemAllAudioProcessorEditor()
+OneKnobAudioProcessorEditor::~OneKnobAudioProcessorEditor()
 {
     stopTimer();
     setLookAndFeel (nullptr);
 }
 
-void OneKnobToRuleThemAllAudioProcessorEditor::timerCallback()
+void OneKnobAudioProcessorEditor::timerCallback()
 {
     static float lastDrive = -1.0f;
     if (std::abs(cachedDrive - lastDrive) > 0.001f)
@@ -200,7 +200,7 @@ void OneKnobToRuleThemAllAudioProcessorEditor::timerCallback()
     }
 }
 
-juce::String OneKnobToRuleThemAllAudioProcessorEditor::getDriveStatusText (float drive)
+juce::String OneKnobAudioProcessorEditor::getDriveStatusText (float drive)
 {
     if (drive < 0.05f) return "The Shire (Bypass)";
     if (drive < 0.20f) return "Rivendell Warmth";
@@ -213,7 +213,7 @@ juce::String OneKnobToRuleThemAllAudioProcessorEditor::getDriveStatusText (float
 }
 
 //==============================================================================
-void OneKnobToRuleThemAllAudioProcessorEditor::paint (juce::Graphics& g)
+void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
 {
     // Draw PNG Background if available
     if (bgImg.isValid())
@@ -259,7 +259,7 @@ void OneKnobToRuleThemAllAudioProcessorEditor::paint (juce::Graphics& g)
     g.drawText ("MORDOR",  215, 460, 60, 20, juce::Justification::centred, false);
 }
 
-void OneKnobToRuleThemAllAudioProcessorEditor::resized()
+void OneKnobAudioProcessorEditor::resized()
 {
     auto area = getLocalBounds();
 

@@ -1,20 +1,20 @@
 /*
   ==============================================================================
 
-    OneKnobToRuleThemAllDSP.cpp
+    OneKnobDSP.cpp
     Implementation of the per-sample asymmetric distortion engine.
 
   ==============================================================================
 */
 
-#include "OneKnobToRuleThemAllDSP.h"
+#include "OneKnobDSP.h"
 #include <cmath>
 
 //==============================================================================
-OneKnobToRuleThemAllDSP::OneKnobToRuleThemAllDSP() {}
+OneKnobDSP::OneKnobDSP() {}
 
 //==============================================================================
-void OneKnobToRuleThemAllDSP::prepare (double sampleRate, int maxBlockSize, int numChannels)
+void OneKnobDSP::prepare (double sampleRate, int maxBlockSize, int numChannels)
 {
     juce::ignoreUnused (maxBlockSize);
     currentSampleRate = sampleRate;
@@ -52,7 +52,7 @@ void OneKnobToRuleThemAllDSP::prepare (double sampleRate, int maxBlockSize, int 
 }
 
 //==============================================================================
-void OneKnobToRuleThemAllDSP::reset()
+void OneKnobDSP::reset()
 {
     for (auto& cf : channelFilters)
     {
@@ -67,28 +67,28 @@ void OneKnobToRuleThemAllDSP::reset()
 //==============================================================================
 // Parameter setters
 //==============================================================================
-void OneKnobToRuleThemAllDSP::setInputGain  (float g)  { inputGain  = g; }
-void OneKnobToRuleThemAllDSP::setOutputGain (float g)  { outputGain = g; }
+void OneKnobDSP::setInputGain  (float g)  { inputGain  = g; }
+void OneKnobDSP::setOutputGain (float g)  { outputGain = g; }
 
-void OneKnobToRuleThemAllDSP::setPreHPFCutoff (float freqHz)
+void OneKnobDSP::setPreHPFCutoff (float freqHz)
 {
     for (auto& cf : channelFilters)
         cf.preHPF.setCutoffFrequency (freqHz);
 }
 
-void OneKnobToRuleThemAllDSP::setPostLPFCutoff (float freqHz)
+void OneKnobDSP::setPostLPFCutoff (float freqHz)
 {
     for (auto& cf : channelFilters)
         cf.postLPF.setCutoffFrequency (freqHz);
 }
 
-void OneKnobToRuleThemAllDSP::setBiasDepth     (float d)  { biasDepth = d; }
-void OneKnobToRuleThemAllDSP::setSaturationMode (SaturationMode m) { satMode = m; }
+void OneKnobDSP::setBiasDepth     (float d)  { biasDepth = d; }
+void OneKnobDSP::setSaturationMode (SaturationMode m) { satMode = m; }
 
 //==============================================================================
 // Per-sample processing
 //==============================================================================
-float OneKnobToRuleThemAllDSP::processSample (int channel, float inputSample)
+float OneKnobDSP::processSample (int channel, float inputSample)
 {
     const auto ch = static_cast<size_t> (channel);
 
@@ -132,7 +132,7 @@ float OneKnobToRuleThemAllDSP::processSample (int channel, float inputSample)
 // Waveshaper kernels
 //==============================================================================
 
-float OneKnobToRuleThemAllDSP::waveshapeTape (float x)
+float OneKnobDSP::waveshapeTape (float x)
 {
     // y = 2x - x|x|   for |x| <= 1
     // y = sgn(x)       otherwise
@@ -141,7 +141,7 @@ float OneKnobToRuleThemAllDSP::waveshapeTape (float x)
     return 2.0f * x - x * std::fabs (x);
 }
 
-float OneKnobToRuleThemAllDSP::waveshapeConsole (float x)
+float OneKnobDSP::waveshapeConsole (float x)
 {
     // Chebyshev polynomial summation using T1..T4
     // T1(x) = x
@@ -168,7 +168,7 @@ float OneKnobToRuleThemAllDSP::waveshapeConsole (float x)
     return juce::jlimit (-1.0f, 1.0f, y);
 }
 
-float OneKnobToRuleThemAllDSP::waveshapeDestroy (float x)
+float OneKnobDSP::waveshapeDestroy (float x)
 {
     // Asymmetric piecewise waveshaper:
     //   Positive phase → 3rd-order polynomial saturation
@@ -199,7 +199,7 @@ float OneKnobToRuleThemAllDSP::waveshapeDestroy (float x)
 //==============================================================================
 // Envelope follower coefficient calculation
 //==============================================================================
-void OneKnobToRuleThemAllDSP::updateEnvelopeCoefficients (double sampleRate)
+void OneKnobDSP::updateEnvelopeCoefficients (double sampleRate)
 {
     // Attack ≈ 5 ms, Release ≈ 100 ms
     const float attackTimeMs  = 5.0f;

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(OneKnobToRuleThemAll VERSION 1.0.0 LANGUAGES C CXX)
+project(OneKnob VERSION 1.0.0 LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -36,9 +36,9 @@ endif()
 # ──────────────────────────────────────────────────────────────────────────────
 # Plugin target
 # ──────────────────────────────────────────────────────────────────────────────
-juce_add_plugin(OneKnobToRuleThemAll
+juce_add_plugin(OneKnob
     COMPANY_NAME             "fenrikos"
-    BUNDLE_ID                "com.fenrikos.OneKnobToRuleThemAll"
+    BUNDLE_ID                "com.fenrikos.OneKnob"
     IS_SYNTH                 FALSE
     NEEDS_MIDI_INPUT         FALSE
     NEEDS_MIDI_OUTPUT        FALSE
@@ -48,24 +48,24 @@ juce_add_plugin(OneKnobToRuleThemAll
     PLUGIN_CODE              Okrg
     FORMATS                  ${ONEKNOB_FORMATS}
     LV2URI                   "https://github.com/FenrirRhogar/OneKnob"
-    PRODUCT_NAME             "OneKnobToRuleThemAll"
+    PRODUCT_NAME             "One Knob"
     ICON_BIG                 "Assets/Knob.png"
     ICON_SMALL               "Assets/Knob.png"
     COPY_PLUGIN_AFTER_BUILD  FALSE
 )
 
-juce_generate_juce_header(OneKnobToRuleThemAll)
+juce_generate_juce_header(OneKnob)
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Source files
 # ──────────────────────────────────────────────────────────────────────────────
-target_sources(OneKnobToRuleThemAll PRIVATE
+target_sources(OneKnob PRIVATE
     Source/PluginProcessor.cpp
     Source/PluginEditor.cpp
-    Source/OneKnobToRuleThemAllDSP.cpp
+    Source/OneKnobDSP.cpp
 )
 
-target_include_directories(OneKnobToRuleThemAll
+target_include_directories(OneKnob
     PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/Source
 )
@@ -73,7 +73,7 @@ target_include_directories(OneKnobToRuleThemAll
 # ──────────────────────────────────────────────────────────────────────────────
 # Compile definitions
 # ──────────────────────────────────────────────────────────────────────────────
-target_compile_definitions(OneKnobToRuleThemAll
+target_compile_definitions(OneKnob
     PUBLIC
         JUCE_WEB_BROWSER=0
         JUCE_USE_CURL=0
@@ -83,7 +83,7 @@ target_compile_definitions(OneKnobToRuleThemAll
 # ──────────────────────────────────────────────────────────────────────────────
 # Assets
 # ──────────────────────────────────────────────────────────────────────────────
-juce_add_binary_data(OneKnobToRuleThemAll_Assets
+juce_add_binary_data(OneKnob_Assets
     HEADER_NAME "BinaryData.h"
     NAMESPACE BinaryData
     SOURCES
@@ -94,9 +94,9 @@ juce_add_binary_data(OneKnobToRuleThemAll_Assets
 # ──────────────────────────────────────────────────────────────────────────────
 # Linked JUCE modules — includes juce_dsp and juce_audio_utils as required
 # ──────────────────────────────────────────────────────────────────────────────
-target_link_libraries(OneKnobToRuleThemAll
+target_link_libraries(OneKnob
     PRIVATE
-        OneKnobToRuleThemAll_Assets
+        OneKnob_Assets
         juce::juce_audio_basics
         juce::juce_audio_devices
         juce::juce_audio_formats
@@ -116,5 +116,5 @@ target_link_libraries(OneKnobToRuleThemAll
 )
 
 if(ONEKNOB_LTO)
-    target_link_libraries(OneKnobToRuleThemAll PUBLIC juce::juce_recommended_lto_flags)
+    target_link_libraries(OneKnob PUBLIC juce::juce_recommended_lto_flags)
 endif()
