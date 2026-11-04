@@ -13,6 +13,7 @@
 #include <JuceHeader.h>
 #include "OneKnobDSP.h"
 #include "BypassFader.h"
+#include "LevelCompensation.h"
 
 //==============================================================================
 class OneKnobAudioProcessor  : public juce::AudioProcessor
@@ -70,6 +71,9 @@ private:
 
     /** Smoother for the macro drive parameter to avoid zipper noise. */
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedDrive;
+
+    /** The per-mode level trim, smoothed so a mode change never steps the output gain. */
+    juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedTrimDb;
 
     /** 8x oversampling keeps the waveshapers' harmonics from folding back as aliasing.
         Linear-phase FIR with an integer latency, which is reported to the host. */

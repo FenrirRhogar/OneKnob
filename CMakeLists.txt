@@ -118,3 +118,15 @@ target_link_libraries(OneKnob
 if(ONEKNOB_LTO)
     target_link_libraries(OneKnob PUBLIC juce::juce_recommended_lto_flags)
 endif()
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Optional: OneKnob_calibrate measures the level change per mode and prints the trim table
+# for Source/LevelCompensation.h
+# ──────────────────────────────────────────────────────────────────────────────
+option(ONEKNOB_CALIBRATE "Build the level calibration tool" OFF)
+if(ONEKNOB_CALIBRATE)
+    add_executable(OneKnob_calibrate tools/CalibrateLevel.cpp)
+    target_include_directories(OneKnob_calibrate PRIVATE $<TARGET_PROPERTY:OneKnob,INCLUDE_DIRECTORIES>)
+    target_compile_definitions(OneKnob_calibrate PRIVATE $<TARGET_PROPERTY:OneKnob,COMPILE_DEFINITIONS>)
+    target_link_libraries(OneKnob_calibrate PRIVATE OneKnob)
+endif()

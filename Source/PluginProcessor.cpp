@@ -139,6 +139,11 @@ void OneKnobAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
     smoothedDrive.reset (sampleRate, 0.02);  // 20 ms smoothing
     smoothedDrive.setCurrentAndTargetValue (
         apvts.getRawParameterValue ("macroDrive")->load());
+
+    smoothedTrimDb.reset (sampleRate, 0.02);
+    smoothedTrimDb.setCurrentAndTargetValue (
+        oneknob::levelTrim (static_cast<int> (apvts.getRawParameterValue ("satFlavor")->load()),
+                            smoothedDrive.getCurrentValue()));
 }
 
 void OneKnobAudioProcessor::releaseResources()
@@ -232,8 +237,10 @@ void OneKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
         // 5. Output Gain Compensation (inverse of input gain)
         //    Reduced from 0.85f to 0.25f because the waveshaper naturally crushes the amplitude.
-        //    Pulling it back too much causes a severe volume drop.
-        const float outputGainDb  = -(inputGainDb * 0.25f);
+        //    Pulling it back too much causes a severe volume drop. The measured per-mode trim
+        //    on top keeps the output level with the input across the whole knob.
+        smoothedTrimDb.setTargetValue (oneknob::levelTrim (flavorIdx, drive));
+        const float outputGainDb  = -(inputGainDb * 0.25f) + smoothedTrimDb.getNextValue();
         const float outputGainLin = std::pow (10.0f, outputGainDb / 20.0f);
         dspEngine.setOutputGain (outputGainLin);
 
