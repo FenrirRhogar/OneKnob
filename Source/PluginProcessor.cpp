@@ -263,6 +263,7 @@ void OneKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     oversampling.processSamplesDown (block);
     bypassFader.apply (buffer, numChannels, apvts.getRawParameterValue ("bypass")->load() > 0.5f);
+    outputPeak.store (buffer.getMagnitude (0, numSamples));
 }
 
 //==============================================================================

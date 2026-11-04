@@ -62,6 +62,9 @@ public:
     /** Public access to the APVTS for the editor. */
     juce::AudioProcessorValueTreeState apvts;
 
+    /** Peak output level of the last block, for the editor's glow and meter. */
+    std::atomic<float> outputPeak { 0.0f };
+
     /** Creates the parameter layout used by the APVTS. */
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
