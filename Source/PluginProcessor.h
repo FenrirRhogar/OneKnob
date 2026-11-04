@@ -68,5 +68,9 @@ private:
     /** Smoother for the macro drive parameter to avoid zipper noise. */
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedDrive;
 
+    /** 4x oversampling keeps the waveshapers' harmonics from folding back as aliasing.
+        Linear-phase FIR with an integer latency, which is reported to the host. */
+    juce::dsp::Oversampling<float> oversampling { 2, 2, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, true, true };
+
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobAudioProcessor)
 };

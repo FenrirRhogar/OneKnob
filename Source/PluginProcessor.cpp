@@ -124,7 +124,12 @@ void OneKnobAudioProcessor::changeProgramName (int index, const juce::String& ne
 //==============================================================================
 void OneKnobAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
-    dspEngine.prepare (sampleRate, samplesPerBlock, getTotalNumInputChannels());
+    oversampling.reset();
+    oversampling.initProcessing (static_cast<size_t> (samplesPerBlock));
+    setLatencySamples (static_cast<int> (oversampling.getLatencyInSamples()));
+
+    const auto factor = static_cast<int> (oversampling.getOversamplingFactor());
+    dspEngine.prepare (sampleRate * factor, samplesPerBlock * factor, getTotalNumInputChannels());
 
     smoothedDrive.reset (sampleRate, 0.02);  // 20 ms smoothing
     smoothedDrive.setCurrentAndTargetValue (
@@ -134,6 +139,7 @@ void OneKnobAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 void OneKnobAudioProcessor::releaseResources()
 {
     dspEngine.reset();
+    oversampling.reset();
 }
 
 #ifndef JucePlugin_PreferredChannelConfigurations
@@ -182,8 +188,17 @@ void OneKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
 
     const int numSamples  = buffer.getNumSamples();
     const int numChannels = juce::jmin (totalNumInputChannels, 2);
+    if (numChannels == 0)
+        return;
+
+    juce::dsp::AudioBlock<float> block (buffer.getArrayOfWritePointers(),
+                                        static_cast<size_t> (numChannels),
+                                        static_cast<size_t> (numSamples));
+    auto up = oversampling.processSamplesUp (block);
+    const int factor = static_cast<int> (oversampling.getOversamplingFactor());
 
     // ---- Per-sample processing with smoothed macro drive --------------------
+    // The drive mapping runs once per host sample; the waveshaping runs at the oversampled rate.
     for (int sample = 0; sample < numSamples; ++sample)
     {
         const float drive = smoothedDrive.getNextValue();
@@ -215,18 +230,24 @@ void OneKnobAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer,
         const float outputGainLin = std::pow (10.0f, outputGainDb / 20.0f);
         dspEngine.setOutputGain (outputGainLin);
 
+        // Fade in the DSP effect over the first 2% of the knob to ensure 0% is true bypass.
+        // Mixing before downsampling keeps the dry and processed signals time-aligned.
+        const float mix = juce::jlimit (0.0f, 1.0f, drive * 50.0f);
+
         // ── Process each channel ──
         for (int ch = 0; ch < numChannels; ++ch)
         {
-            float* channelData = buffer.getWritePointer (ch);
-            const float inputSample = channelData[sample];
-            const float processedSample = dspEngine.processSample (ch, inputSample);
-            
-            // Fade in the DSP effect over the first 2% of the knob to ensure 0% is true bypass
-            const float mix = juce::jlimit (0.0f, 1.0f, drive * 50.0f); 
-            channelData[sample] = inputSample + (processedSample - inputSample) * mix;
+            float* channelData = up.getChannelPointer (static_cast<size_t> (ch));
+            for (int k = sample * factor; k < (sample + 1) * factor; ++k)
+            {
+                const float inputSample = channelData[k];
+                const float processedSample = dspEngine.processSample (ch, inputSample);
+                channelData[k] = inputSample + (processedSample - inputSample) * mix;
+            }
         }
     }
+
+    oversampling.processSamplesDown (block);
 }
 
 //==============================================================================
