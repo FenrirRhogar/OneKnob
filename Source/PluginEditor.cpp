@@ -18,7 +18,7 @@
 //==============================================================================
 juce::Colour OneKnobLookAndFeel::getArcColour (float normalised)
 {
-    // Fiery One Ring Gradient: Gold (0.15) to Deep Red (0.0)
+    // Fiery gradient: gold (0.15) to deep red (0.0)
     float hue = 0.15f - (normalised * 0.15f);
     if (hue < 0.0f) hue += 1.0f;
     return juce::Colour::fromHSV (hue, 0.9f, 0.95f, 1.0f);
@@ -202,14 +202,14 @@ void OneKnobAudioProcessorEditor::timerCallback()
 
 juce::String OneKnobAudioProcessorEditor::getDriveStatusText (float drive)
 {
-    if (drive < 0.05f) return "The Shire (Bypass)";
-    if (drive < 0.20f) return "Rivendell Warmth";
-    if (drive < 0.35f) return "Rohan Drive";
-    if (drive < 0.50f) return "Gondor Saturation";
-    if (drive < 0.65f) return "Isengard Distortion";
-    if (drive < 0.80f) return "Mount Doom Clipping";
-    if (drive < 0.95f) return "Eye of Sauron";
-    return "One Ring To Rule Them All";
+    if (drive < 0.05f) return "Sleeping Village (Bypass)";
+    if (drive < 0.20f) return "Hearth Warmth";
+    if (drive < 0.35f) return "Tavern Drive";
+    if (drive < 0.50f) return "Forge Saturation";
+    if (drive < 0.65f) return "Wizard's Distortion";
+    if (drive < 0.80f) return "Volcano Clipping";
+    if (drive < 0.95f) return "Dragon's Breath";
+    return "Rules Them All";
 }
 
 //==============================================================================
@@ -256,7 +256,7 @@ void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (juce::FontOptions (10.0f, juce::Font::bold));
     g.drawText ("DWARVEN", 85,  460, 60, 20, juce::Justification::centred, false);
     g.drawText ("ELVEN",   150, 460, 60, 20, juce::Justification::centred, false);
-    g.drawText ("MORDOR",  215, 460, 60, 20, juce::Justification::centred, false);
+    g.drawText ("DRAGONFIRE", 205, 460, 80, 20, juce::Justification::centred, false);
 }
 
 void OneKnobAudioProcessorEditor::resized()

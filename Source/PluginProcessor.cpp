@@ -30,7 +30,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     layout.add (std::make_unique<juce::AudioParameterChoice> (
         juce::ParameterID ("satFlavor", 1),
         "Saturation Flavor",
-        juce::StringArray { "Dwarven (Tape)", "Elven (Console)", "Mordor (Destroy)" },
+        juce::StringArray { "Dwarven (Tape)", "Elven (Console)", "Dragonfire (Destroy)" },
         0));
 
     return layout;
