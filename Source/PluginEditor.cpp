@@ -119,11 +119,16 @@ void OneKnobLookAndFeel::drawRotarySlider (juce::Graphics& g,
 
     if (knobImg.isValid())
     {
+        // Resample the artwork once per size and display scale; rotating that copy is cheap.
+        const int pixels = juce::roundToInt (diameter * g.getInternalContext().getPhysicalPixelScaleFactor());
+        if (scaledKnob.getWidth() != pixels && pixels > 0)
+            scaledKnob = knobImg.rescaled (pixels, pixels, juce::Graphics::highResamplingQuality);
+
         g.saveState();
         g.setOpacity (1.0f);   // drawImage uses the current colour's alpha
         g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
         g.addTransform (juce::AffineTransform::rotation (angle, centreX, centreY));
-        g.drawImage (knobImg, imgBounds);
+        g.drawImage (scaledKnob, imgBounds);
         g.restoreState();
     }
     else
@@ -261,11 +266,18 @@ void OneKnobAudioProcessorEditor::timerCallback()
     meterLevel = peak > meterLevel ? peak : meterLevel * 0.85f;
 
     const bool levelMoved = std::abs (meterLevel - previousLevel) > 0.002f;
-    if (std::abs(cachedDrive - lastDrive) > 0.001f || levelMoved)
+    oneKnobLookAndFeel.glowLevel = meterLevel;
+
+    if (std::abs(cachedDrive - lastDrive) > 0.001f)
     {
         lastDrive = cachedDrive;
-        oneKnobLookAndFeel.glowLevel = meterLevel;
         repaint();
+    }
+    else if (levelMoved)
+    {
+        // Only the glow and the meter move with the audio.
+        repaint (driveSlider.getBounds());
+        repaint (meterBounds().toNearestIntEdges().expanded (2));
     }
 }
 
@@ -284,11 +296,18 @@ juce::String OneKnobAudioProcessorEditor::getDriveStatusText (float drive)
 //==============================================================================
 void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
 {
-    // Draw PNG Background if available
+    // Draw PNG Background if available, resampled once per display scale
     if (bgImg.isValid())
     {
-        g.setImageResamplingQuality (juce::Graphics::highResamplingQuality);
-        g.drawImage (bgImg, getLocalBounds().toFloat());
+        const float scale = g.getInternalContext().getPhysicalPixelScaleFactor();
+        if (scaledBg.isNull() || ! juce::approximatelyEqual (scaledBgScale, scale))
+        {
+            scaledBgScale = scale;
+            scaledBg = bgImg.rescaled (juce::roundToInt ((float) getWidth() * scale),
+                                       juce::roundToInt ((float) getHeight() * scale),
+                                       juce::Graphics::highResamplingQuality);
+        }
+        g.drawImage (scaledBg, getLocalBounds().toFloat());
     }
     else
     {
@@ -327,7 +346,7 @@ void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
 
     // ---- Ember level meter --------------------------------------------------
     {
-        auto meter = juce::Rectangle<float> (120.0f, 4.0f).withCentre ({ getWidth() * 0.5f, 462.0f });
+        const auto meter = meterBounds();
         g.setColour (ink.withAlpha (0.18f));
         g.fillRoundedRectangle (meter, 2.0f);
 
@@ -341,6 +360,11 @@ void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
             g.fillRoundedRectangle (lit, 2.0f);
         }
     }
+}
+
+juce::Rectangle<float> OneKnobAudioProcessorEditor::meterBounds() const
+{
+    return juce::Rectangle<float> (120.0f, 4.0f).withCentre ({ (float) getWidth() * 0.5f, 462.0f });
 }
 
 void OneKnobAudioProcessorEditor::resized()

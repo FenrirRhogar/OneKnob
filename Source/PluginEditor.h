@@ -37,8 +37,8 @@ public:
     /** Output level (0-1, smoothed) that makes the glow breathe with the audio. */
     float glowLevel = 0.0f;
 
-    // PNG Assets
-    juce::Image knobImg;
+    // PNG Assets, and the knob resampled to its drawn size
+    juce::Image knobImg, scaledKnob;
 };
 
 //==============================================================================
@@ -85,6 +85,8 @@ private:
     /** Returns a fun status string based on the current drive value. */
     static juce::String getDriveStatusText (float drive);
 
+    juce::Rectangle<float> meterBounds() const;
+
     OneKnobAudioProcessor& audioProcessor;
 
     // Custom look and feel
@@ -104,8 +106,9 @@ private:
     // Output level, smoothed for the glow and the meter
     float meterLevel = 0.0f;
 
-    // PNG Background
-    juce::Image bgImg;
+    // PNG Background, and a copy resampled to the window at the current display scale
+    juce::Image bgImg, scaledBg;
+    float scaledBgScale = 0.0f;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobAudioProcessorEditor)
 };
