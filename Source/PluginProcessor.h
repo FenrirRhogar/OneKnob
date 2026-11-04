@@ -71,9 +71,9 @@ private:
     /** Smoother for the macro drive parameter to avoid zipper noise. */
     juce::SmoothedValue<float, juce::ValueSmoothingTypes::Linear> smoothedDrive;
 
-    /** 4x oversampling keeps the waveshapers' harmonics from folding back as aliasing.
+    /** 8x oversampling keeps the waveshapers' harmonics from folding back as aliasing.
         Linear-phase FIR with an integer latency, which is reported to the host. */
-    juce::dsp::Oversampling<float> oversampling { 2, 2, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, true, true };
+    juce::dsp::Oversampling<float> oversampling { 2, 3, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple, true, true };
 
     /** Crossfades to the latency-aligned dry signal when the host (or the UI) bypasses the plugin. */
     oneknob::BypassFader bypassFader;
