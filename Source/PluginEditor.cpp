@@ -166,6 +166,7 @@ OneKnobAudioProcessorEditor::OneKnobAudioProcessorEditor (
         audioProcessor.apvts, "macroDrive", driveSlider);
 
     driveSlider.onValueChange = [this] { cachedDrive = static_cast<float>(driveSlider.getValue()); };
+    cachedDrive = static_cast<float> (driveSlider.getValue());   // show the saved value when the window opens
 
     // ---- Flavor Switch (3-Way Toggle) ---------------------------------------
     modeSwitch.setSliderStyle (juce::Slider::LinearHorizontal);
@@ -192,7 +193,6 @@ OneKnobAudioProcessorEditor::~OneKnobAudioProcessorEditor()
 
 void OneKnobAudioProcessorEditor::timerCallback()
 {
-    static float lastDrive = -1.0f;
     if (std::abs(cachedDrive - lastDrive) > 0.001f)
     {
         lastDrive = cachedDrive;

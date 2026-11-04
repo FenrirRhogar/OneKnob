@@ -74,6 +74,7 @@ private:
 
     // Cached drive value for background painting
     float cachedDrive = 0.0f;
+    float lastDrive = -1.0f;   // last value painted, per editor
 
     // PNG Background
     juce::Image bgImg;
