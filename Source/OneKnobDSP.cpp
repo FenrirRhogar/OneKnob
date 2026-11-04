@@ -22,7 +22,7 @@ void OneKnobDSP::prepare (double sampleRate, int maxBlockSize, int numChannels)
     juce::dsp::ProcessSpec spec;
     spec.sampleRate       = sampleRate;
     spec.maximumBlockSize = static_cast<juce::uint32> (maxBlockSize);
-    spec.numChannels      = 1; // filters are instantiated per-channel
+    spec.numChannels      = 1; // one filter object per channel, so each always uses its channel 0
 
     const int chCount = juce::jmin (numChannels, 2);
 
@@ -96,7 +96,7 @@ float OneKnobDSP::processSample (int channel, float inputSample)
     float x = inputSample * inputGain;
 
     // ---- 2. Pre-waveshaper HPF -------------------------------------------
-    x = channelFilters[ch].preHPF.processSample (static_cast<int>(ch), x);
+    x = channelFilters[ch].preHPF.processSample (0, x);
 
     // ---- 3. Envelope follower (simple peak detector) ---------------------
     const float absX = std::fabs (x);
@@ -117,10 +117,10 @@ float OneKnobDSP::processSample (int channel, float inputSample)
     }
 
     // ---- 6. Post-waveshaper LPF ------------------------------------------
-    x = channelFilters[ch].postLPF.processSample (static_cast<int>(ch), x);
+    x = channelFilters[ch].postLPF.processSample (0, x);
 
     // ---- 7. DC Blocker (static 15 Hz HPF) --------------------------------
-    x = channelFilters[ch].dcBlocker.processSample (static_cast<int>(ch), x);
+    x = channelFilters[ch].dcBlocker.processSample (0, x);
 
     // ---- 8. Output gain compensation -------------------------------------
     x *= outputGain;
