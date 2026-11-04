@@ -25,6 +25,7 @@ void OneKnobDSP::prepare (double sampleRate, int maxBlockSize, int numChannels)
     spec.numChannels      = 1; // one filter object per channel, so each always uses its channel 0
 
     const int chCount = juce::jmin (numChannels, 2);
+    activeChannels = juce::jmax (1, chCount);
 
     for (int ch = 0; ch < chCount; ++ch)
     {
@@ -48,6 +49,7 @@ void OneKnobDSP::prepare (double sampleRate, int maxBlockSize, int numChannels)
     }
 
     updateEnvelopeCoefficients (sampleRate);
+    modeFadeLength = juce::jmax (1, static_cast<int> (sampleRate * 0.02));
     reset();
 }
 
@@ -62,6 +64,8 @@ void OneKnobDSP::reset()
     }
 
     envelopeState.fill (0.0f);
+    previousMode = satMode;
+    modeFadeRemaining = 0;
 }
 
 //==============================================================================
@@ -83,7 +87,15 @@ void OneKnobDSP::setPostLPFCutoff (float freqHz)
 }
 
 void OneKnobDSP::setBiasDepth     (float d)  { biasDepth = d; }
-void OneKnobDSP::setSaturationMode (SaturationMode m) { satMode = m; }
+void OneKnobDSP::setSaturationMode (SaturationMode m)
+{
+    if (m == satMode)
+        return;
+
+    previousMode = satMode;
+    satMode = m;
+    modeFadeRemaining = modeFadeLength;
+}
 
 //==============================================================================
 // Per-sample processing
@@ -108,12 +120,17 @@ float OneKnobDSP::processSample (int channel, float inputSample)
     // ---- 4. Dynamic DC Bias (Sag) ----------------------------------------
     x += envelopeState[ch] * biasDepth;
 
-    // ---- 5. Waveshaper ---------------------------------------------------
-    switch (satMode)
+    // ---- 5. Waveshaper (crossfaded for a moment after a mode change) -----
+    if (modeFadeRemaining > 0)
     {
-        case SaturationMode::Tape:    x = waveshapeTape    (x); break;
-        case SaturationMode::Console: x = waveshapeConsole (x); break;
-        case SaturationMode::Destroy: x = waveshapeDestroy (x); break;
+        const float t = static_cast<float> (modeFadeRemaining) / static_cast<float> (modeFadeLength);
+        x = waveshape (satMode, x) + t * (waveshape (previousMode, x) - waveshape (satMode, x));
+        if (channel == activeChannels - 1)   // one step per sample frame, after the last channel
+            --modeFadeRemaining;
+    }
+    else
+    {
+        x = waveshape (satMode, x);
     }
 
     // ---- 6. Post-waveshaper LPF ------------------------------------------
@@ -131,6 +148,17 @@ float OneKnobDSP::processSample (int channel, float inputSample)
 //==============================================================================
 // Waveshaper kernels
 //==============================================================================
+
+float OneKnobDSP::waveshape (SaturationMode mode, float x)
+{
+    switch (mode)
+    {
+        case SaturationMode::Tape:    return waveshapeTape    (x);
+        case SaturationMode::Console: return waveshapeConsole (x);
+        case SaturationMode::Destroy: return waveshapeDestroy (x);
+    }
+    return x;
+}
 
 float OneKnobDSP::waveshapeTape (float x)
 {

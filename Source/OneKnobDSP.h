@@ -89,6 +89,7 @@ private:
     static float waveshapeTape    (float x);
     static float waveshapeConsole (float x);
     static float waveshapeDestroy (float x);
+    static float waveshape (SaturationMode mode, float x);
 
     //==========================================================================
     // Envelope follower helpers
@@ -113,6 +114,12 @@ private:
     float outputGain   = 1.0f;
     float biasDepth    = 0.0f;
     SaturationMode satMode = SaturationMode::Tape;
+
+    // Mode changes crossfade from the previous waveshaper over ~20 ms instead of jumping.
+    SaturationMode previousMode = SaturationMode::Tape;
+    int modeFadeLength = 1;
+    int modeFadeRemaining = 0;
+    int activeChannels = 2;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (OneKnobDSP)
 };
