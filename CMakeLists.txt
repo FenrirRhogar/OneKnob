@@ -141,3 +141,14 @@ if(ONEKNOB_CALIBRATE)
     target_compile_definitions(OneKnob_calibrate PRIVATE $<TARGET_PROPERTY:OneKnob,COMPILE_DEFINITIONS>)
     target_link_libraries(OneKnob_calibrate PRIVATE OneKnob)
 endif()
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Optional: OneKnob_snapshot renders the editor to PNG (store artwork, visual checks)
+# ──────────────────────────────────────────────────────────────────────────────
+option(ONEKNOB_SNAPSHOT "Build the editor snapshot tool" OFF)
+if(ONEKNOB_SNAPSHOT)
+    add_executable(OneKnob_snapshot tools/Snapshot.cpp)
+    target_include_directories(OneKnob_snapshot PRIVATE $<TARGET_PROPERTY:OneKnob,INCLUDE_DIRECTORIES>)
+    target_compile_definitions(OneKnob_snapshot PRIVATE $<TARGET_PROPERTY:OneKnob,COMPILE_DEFINITIONS>)
+    target_link_libraries(OneKnob_snapshot PRIVATE OneKnob)
+endif()
