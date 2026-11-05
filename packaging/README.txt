@@ -75,4 +75,4 @@ LICENCE AND SOURCE
 ------------------
 Copyright (C) 2026 fenrikos. One Knob is free software under the GNU Affero General Public License,
 version 3 or later (see LICENSE.txt). It comes with ABSOLUTELY NO WARRANTY.
-The complete source code is at https://github.com/FenrirRhogar/OneKnobToRuleThemAll
+The complete source code is at https://github.com/FenrirRhogar/OneKnob
