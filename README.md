@@ -83,5 +83,5 @@ One Knob uses [JUCE](https://juce.com) under the AGPLv3, the VST 3 SDK (MIT) and
 ## ☕ Support the Project
 
 One Knob is completely free and open-source. If it finds a place in your mixes, you can
-**[support it on Gumroad](https://fenrikos.gumroad.com/l/oneknobtorulethemall)** for whatever you like.
+**[support it on Gumroad](https://fenrikos.gumroad.com/l/oneknob)** for whatever you like.
 Your support helps keep this project alive and funds future plugins!
