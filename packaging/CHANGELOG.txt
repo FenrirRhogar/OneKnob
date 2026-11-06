@@ -1,5 +1,11 @@
 ONE KNOB  -  CHANGELOG
 
+1.1.1
+- Update notice: the version under the title shows "UPDATE x.y.z AVAILABLE" when a newer version is
+  out. Click it for the download page, or to switch the check off. It asks GitHub at most once a day
+  and sends nothing about you or your sessions.
+- macOS builds come from a newer build machine (macOS 15).
+
 1.1.0
 - New name: OneKnobToRuleThemAll is now One Knob. Old sessions open with the same settings.
 Sound
