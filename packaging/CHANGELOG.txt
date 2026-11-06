@@ -4,6 +4,7 @@ ONE KNOB  -  CHANGELOG
 - Update notice: the version under the title shows "UPDATE x.y.z AVAILABLE" when a newer version is
   out. Click it for the download page, or to switch the check off. It asks GitHub at most once a day
   and sends nothing about you or your sessions.
+- Linux Standalone: JACK support (PipeWire's JACK works too), for much lower latency than ALSA.
 - macOS builds come from a newer build machine (macOS 15).
 
 1.1.0
