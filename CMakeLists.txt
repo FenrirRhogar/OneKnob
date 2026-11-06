@@ -76,7 +76,11 @@ target_include_directories(OneKnob
 target_compile_definitions(OneKnob
     PUBLIC
         JUCE_WEB_BROWSER=0
-        JUCE_USE_CURL=0
+        JUCE_USE_CURL=1                       # update check (UpdateCheck.h); on Linux libcurl is
+        JUCE_LOAD_CURL_SYMBOLS_LAZILY=1       # loaded at run time, so it is not a hard dependency
+        FENRIKOS_UPDATE_REPO="OneKnob"
+        FENRIKOS_UPDATE_NAME="One Knob"
+        FENRIKOS_PRODUCT_URL="https://fenrikos.gumroad.com/l/oneknob"
         JUCE_VST3_CAN_REPLACE_VST2=0
 )
 

@@ -246,6 +246,12 @@ OneKnobAudioProcessorEditor::OneKnobAudioProcessorEditor (
     // ---- Flavor selector ----------------------------------------------------
     addAndMakeVisible (modeSelector);
 
+    updateBadge = std::make_unique<fenrikos::UpdateBadge> (
+        juce::String (juce::CharPointer_UTF8 ("FENRIKOS  \xc2\xb7  V" JucePlugin_VersionString)),
+        juce::FontOptions (8.5f, juce::Font::bold).withKerningFactor (0.3f),
+        fadedInk.withAlpha (0.6f), juce::Colour (0xFFE86028), juce::Justification::centred);
+    addAndMakeVisible (*updateBadge);
+
     // ---- Window size --------------------------------------------------------
     setSize (360, 540);
 
@@ -326,9 +332,6 @@ void OneKnobAudioProcessorEditor::paint (juce::Graphics& g)
     g.setFont (juce::FontOptions (13.0f, juce::Font::bold).withKerningFactor (0.12f));
     g.drawText ("TO RULE THEM ALL", 0, 80, getWidth(), 20, juce::Justification::centred, true);
 
-    g.setColour (fadedInk.withAlpha (0.6f));
-    g.setFont (juce::FontOptions (8.5f, juce::Font::bold).withKerningFactor (0.3f));
-    g.drawText (juce::String (juce::CharPointer_UTF8 ("FENRIKOS  \xc2\xb7  V" JucePlugin_VersionString)), 0, 102, getWidth(), 12, juce::Justification::centred, false);
 
     // ---- Dynamic Status Text ------------------------------------------------
     juce::Rectangle<int> statusArea (0, 404, getWidth(), 30);
@@ -377,4 +380,7 @@ void OneKnobAudioProcessorEditor::resized()
 
     // ---- Flavor selector ----------------------------------------------------
     modeSelector.setBounds (84, 474, 192, 24);
+
+    if (updateBadge != nullptr)
+        updateBadge->setBounds (area.withSizeKeepingCentre (220, 12).withY (102));
 }
