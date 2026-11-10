@@ -100,7 +100,7 @@ private:
     // ---- Flavor selector ----------------------------------------------------
     ModeSelector modeSelector;
 
-    // "FENRIKOS · V1.1.0" under the title, or "UPDATE ... AVAILABLE" in ember (UpdateCheck.h)
+    // "fenrikos · V1.1.0" under the title, or "UPDATE ... AVAILABLE" in ember (UpdateCheck.h)
     std::unique_ptr<fenrikos::UpdateBadge> updateBadge;
 
     // Cached drive value for background painting

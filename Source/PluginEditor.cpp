@@ -247,7 +247,7 @@ OneKnobAudioProcessorEditor::OneKnobAudioProcessorEditor (
     addAndMakeVisible (modeSelector);
 
     updateBadge = std::make_unique<fenrikos::UpdateBadge> (
-        juce::String (juce::CharPointer_UTF8 ("FENRIKOS  \xc2\xb7  V" JucePlugin_VersionString)),
+        juce::String (juce::CharPointer_UTF8 ("fenrikos  \xc2\xb7  V" JucePlugin_VersionString)),
         juce::FontOptions (8.5f, juce::Font::bold).withKerningFactor (0.3f),
         fadedInk.withAlpha (0.6f), juce::Colour (0xFFE86028), juce::Justification::centred);
     addAndMakeVisible (*updateBadge);
